@@ -279,6 +279,9 @@ int i2s_out_init(i2s_out_init_t* init_param) {
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     i2s_ll_tx_clk_set_src(&I2S0, I2S_CLK_D2CLK);
+#elif CONFIG_IDF_TARGET_ESP32S3
+    // ESP32-S3 používa správny zdroj hodin hneď po resetovaní,
+    // takže nie je potrebné volanie i2s_ll_tx_clk_set_src().
 #endif
     // N + b/a = 0
     //    i2s_ll_mclk_div_t first_div = { 2, 3, 47 };  // { N, b, a }
