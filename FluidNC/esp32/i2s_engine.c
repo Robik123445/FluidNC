@@ -14,6 +14,23 @@
 #include "Driver/i2s_out.h"
 #include "Driver/StepTimer.h"
 #include "hal/i2s_hal.h"
+#include "hal/i2s_ll.h"
+#include <soc/i2s_periph.h>
+#include <soc/gpio_sig_map.h>
+#ifndef I2S_LL_TX_FIFO_EMPTY_INT
+#define I2S_LL_TX_FIFO_EMPTY_INT I2S_TX_PUT_DATA_INT_ENA
+#define I2S_FIFO_WRITE(v) (I2S0.fifo_wr = (v))
+#else
+#define I2S_FIFO_WRITE(v) (I2S0.tx_fifo.buf[0] = (v))
+#endif
+
+#ifndef I2S0O_SD_OUT_IDX
+#define I2S0O_SD_OUT_IDX I2S0O_DATA_OUT23_IDX
+#endif
+
+#ifndef SOC_I2S_FIFO_LEN
+#define SOC_I2S_FIFO_LEN (I2S_TX_DATA_NUM + 1)
+#endif
 
 #include <sdkconfig.h>
 
@@ -53,7 +70,7 @@ static inline void i2s_out_reset_fifo_without_lock() {
 
 static int i2s_out_gpio_attach(pinnum_t ws, pinnum_t bck, pinnum_t data) {
     // Route the i2s pins to the appropriate GPIO
-    gpio_route(data, I2S0O_DATA_OUT23_IDX);
+    gpio_route(data, I2S0O_SD_OUT_IDX);
     gpio_route(bck, I2S0O_BCK_OUT_IDX);
     gpio_route(ws, I2S0O_WS_OUT_IDX);
     return 0;
@@ -147,7 +164,7 @@ static int i2s_out_start() {
 // is about half of the modulation period of a laser that
 // is modulated at 20 kHZ.
 
-#define FIFO_LENGTH (I2S_TX_DATA_NUM + 1)
+#define FIFO_LENGTH (SOC_I2S_FIFO_LEN)
 #define FIFO_THRESHOLD (FIFO_LENGTH / 4)
 #define FIFO_REMAINING (FIFO_LENGTH - FIFO_THRESHOLD)
 #define FIFO_RELOAD 8
@@ -173,7 +190,7 @@ void IRAM_ATTR i2s_out_write(pinnum_t pin, uint8_t val) {
 
     if (!timer_running) {
         // Direct write to the I2S FIFO in case the pulse timer is not running
-        I2S0.fifo_wr = i2s_out_port_data;
+        I2S_FIFO_WRITE(i2s_out_port_data);
     }
 }
 
@@ -341,14 +358,14 @@ static void IRAM_ATTR set_timer_ticks(uint32_t ticks) {
 
 static void IRAM_ATTR start_timer() {
     if (!timer_running) {
-        i2s_ll_enable_intr(&I2S0, I2S_TX_PUT_DATA_INT_ENA, 1);
-        i2s_ll_clear_intr_status(&I2S0, I2S_PUT_DATA_INT_CLR);
+        i2s_ll_enable_intr(&I2S0, I2S_LL_TX_FIFO_EMPTY_INT, 1);
+        i2s_ll_clear_intr_status(&I2S0, I2S_LL_TX_FIFO_EMPTY_INT);
         timer_running = true;
     }
 }
 static void IRAM_ATTR stop_timer() {
     if (timer_running) {
-        i2s_ll_enable_intr(&I2S0, I2S_TX_PUT_DATA_INT_ENA, 0);
+        i2s_ll_enable_intr(&I2S0, I2S_LL_TX_FIFO_EMPTY_INT, 0);
         timer_running = false;
     }
 }
@@ -364,11 +381,11 @@ static void IRAM_ATTR i2s_isr() {
     int i = FIFO_RELOAD;
     do {
         if (remaining_pulse_counts) {
-            I2S0.fifo_wr = pulse_data;
+            I2S_FIFO_WRITE(pulse_data);
             --i;
             --remaining_pulse_counts;
         } else if (remaining_delay_counts) {
-            I2S0.fifo_wr = i2s_out_port_data;
+            I2S_FIFO_WRITE(i2s_out_port_data);
             --i;
             --remaining_delay_counts;
         } else {
@@ -392,7 +409,7 @@ static void IRAM_ATTR i2s_isr() {
     // Clear the interrupt after pushing new data into the FIFO.  If you clear
     // it before, the interrupt will re-fire back because the FIFO is still
     // below the threshold.
-    i2s_ll_clear_intr_status(&I2S0, I2S_PUT_DATA_INT_CLR);
+    i2s_ll_clear_intr_status(&I2S0, I2S_LL_TX_FIFO_EMPTY_INT);
 
     // gpio_write(12, 0);
 }
@@ -402,7 +419,7 @@ static void i2s_fifo_intr_setup() {
     esp_intr_alloc_intrstatus(ETS_I2S0_INTR_SOURCE,
                               ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL3,
                               (uint32_t)i2s_ll_get_intr_status_reg(&I2S0),
-                              I2S_PUT_DATA_INT_CLR_M,
+                              I2S_LL_TX_FIFO_EMPTY_INT,
                               i2s_isr,
                               NULL,
                               NULL);
@@ -451,7 +468,7 @@ static IRAM_ATTR void set_dir_pin(int pin, int level) {
 // that we use for step pulses, but the optimizaton might not
 // be worthwhile since direction changes are infrequent.
 static IRAM_ATTR void finish_dir() {
-    I2S0.fifo_wr = i2s_out_port_data;
+    I2S_FIFO_WRITE(i2s_out_port_data);
     delay_us(_dir_delay_us);
 }
 
