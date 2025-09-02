@@ -16,6 +16,18 @@ There is no need to compile the firmware. You use an installation script to uplo
 
 You can have multiple config files stored on the ESP32. The default is config.yaml, but you can change that with [**$Config/Filename=<myOtherConfig.yaml>**](http://wiki.fluidnc.com/en/features/commands_and_settings#config_filename)
 
+## ESP32-S3 Support
+
+FluidNC supports the ESP32‑S3 module. Build firmware with [PlatformIO](https://platformio.org/) using one of:
+
+- `platformio run -e wifi_s3` – WiFi enabled
+- `platformio run -e bt_s3` – Bluetooth enabled
+- `platformio run -e noradio_s3` – no wireless features
+
+ESP32‑S3 boards must provide 16 MB flash and 8 MB PSRAM. The S3 offers only four RMT channels and lacks an internal DAC, so analog spindle output requires an external device.
+
+An [ESP32‑S3 example configuration](https://github.com/bdring/fluidnc-config-files/blob/main/official/esp32-s3-example.yaml) is available for reference.
+
 ## Basic Grbl Compatibility
 
 The intent is to maintain as much Grbl compatibility as possible. It is 100% compatible with the day to day operations of running gcode with a sender, so there is no change to the Grbl gcode send/response protocol, and all Grbl gcode are supported. Most of the $ settings have been replaced with easily readable items in the config file.
