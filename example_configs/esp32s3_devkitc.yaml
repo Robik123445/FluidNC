@@ -1,0 +1,56 @@
+---
+name: ESP32-S3 DevKitC
+board: esp32-s3-devkitc-1
+
+# Stepping configuration uses RMT engine for precise timing
+stepping:
+  engine: RMT  # RMT použité na generovanie krokových pulzov
+  idle_ms: 250
+  dir_delay_us: 1
+  pulse_us: 4
+  disable_delay_us: 0
+
+axes:
+  x:
+    motor0:
+      step_pin: gpio.2      # krokový signál osi X
+      direction_pin: gpio.3  # smer osi X
+      disable_pin: gpio.4   # enable/disable driver X
+      limit_neg_pin: gpio.16:low  # koncový spínač X-
+  y:
+    motor0:
+      step_pin: gpio.5      # krok Y
+      direction_pin: gpio.6  # smer Y
+      disable_pin: gpio.7   # enable driver Y
+      limit_neg_pin: gpio.17:low  # koncový spínač Y-
+    motor1:
+      step_pin: gpio.8      # druhý motor Y2 krok
+      direction_pin: gpio.9  # smer Y2
+      disable_pin: gpio.10  # enable Y2
+  z:
+    motor0:
+      step_pin: gpio.11     # krok Z
+      direction_pin: gpio.12  # smer Z
+      disable_pin: gpio.13  # enable driver Z
+      limit_neg_pin: gpio.18:low  # koncový spínač Z-
+
+probe:
+  pin: gpio.21:low          # dotyková sonda
+
+spindle:
+  pwm_pin: gpio.14          # PWM výstup pre vreteno
+  enable_pin: gpio.15:low   # zapínanie vretena
+
+coolant:
+  mist_pin: gpio.22         # voliteľný výstup hmla
+  flood_pin: gpio.23        # voliteľný výstup flood
+
+# USB-CDC možno zapnúť pridaním tejto sekcie:
+# serial:
+#   usb: true  # povolí USB-CDC
+
+# Wi-Fi povolíte nasledovne:
+# wifi:
+#   ssid: "YourSSID"
+#   password: "YourPassword"
+#   hostname: "fluidnc"
