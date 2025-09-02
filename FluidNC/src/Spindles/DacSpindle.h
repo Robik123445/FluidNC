@@ -4,12 +4,12 @@
 #pragma once
 
 /*
-	DacSpindle.h
+        DacSpindle.h
 
-	This uses the Analog DAC in the ESP32 to generate a voltage
-	proportional to the GCode S value desired. Some spindle uses
-	a 0-5V or 0-10V value to control the spindle. You would use
-	an Op Amp type circuit to get from the 0.3.3V of the ESP32 to that voltage.
+        Analog spindle driver that can use the ESP32 built‑in DAC, an external
+        MCP4822 SPI DAC or a PWM pin followed by an RC filter to generate the
+        analogue control voltage. Configuration determines which backend is
+        used.
 */
 
 #include "OnOffSpindle.h"
@@ -17,7 +17,7 @@
 #include <cstdint>
 
 namespace Spindles {
-    // This uses one of the (2) DAC pins on ESP32 to output a voltage
+    // Drives an analogue spindle output using a selectable backend.
     class Dac : public OnOff {
     public:
         Dac(const char* name) : OnOff(name) {}
@@ -32,14 +32,22 @@ namespace Spindles {
         void setSpeedfromISR(uint32_t dev_speed) override;
 
         // Configuration handlers:
-        // Inherited from PWM
+        void group(Configuration::HandlerBase& handler) override;
 
         ~Dac() {}
 
     private:
-        bool _gpio_ok;  // DAC is on a valid pin
+        enum Mode { Internal = 0, MCP4822 = 1, PWM = 2 };
+
+        bool     _gpio_ok;  // true when selected backend initialised correctly
+        int      _mode      = Internal;
+        uint32_t _pwm_freq  = 5000;  // PWM frequency when using PWM backend
+        Pin      _cs_pin;            // Chip select for MCP4822
+        int      _mcp_channel = 0;   // Channel 0 or 1 for MCP4822
 
     protected:
-        void set_output(uint32_t duty);  // sets DAC instead of PWM
+        void set_output(uint32_t duty);  // write value to selected backend
     };
+
+    extern const EnumItem dacModeItems[];
 }
