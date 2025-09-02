@@ -10,9 +10,12 @@
 #include <driver/rmt.h>
 #include <esp32-hal-gpio.h>
 #include <esp_attr.h>  // IRAM_ATTR
+#include "esp_log.h"
 
 static uint32_t _pulse_delay_us;
 static uint32_t _dir_delay_us;
+
+static const char* TAG = "RMT";
 
 static uint32_t init_engine(uint32_t dir_delay_us, uint32_t pulse_delay_us, uint32_t frequency, bool (*callback)(void)) {
     stepTimerInit(frequency, callback);
@@ -27,7 +30,15 @@ static uint32_t init_engine(uint32_t dir_delay_us, uint32_t pulse_delay_us, uint
 // set_step_pin() later.
 static int init_step_pin(int step_pin, int step_inverted) {
     static rmt_channel_t next_RMT_chan_num = RMT_CHANNEL_0;
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+    // ESP32-S3: channels 0-3 only, advise I2S for extra axes
+    if (next_RMT_chan_num == RMT_CHANNEL_4) {
+        ESP_LOGE(TAG, "RMT supports only 4 axes on ESP32-S3. Use the I2S engine for more.");
+        return -1;
+    }
+#endif
     if (next_RMT_chan_num == RMT_CHANNEL_MAX) {
+        ESP_LOGE(TAG, "RMT supports only 4 axes. Use the I2S engine for more.");
         return -1;
     }
     rmt_channel_t rmt_chan_num = next_RMT_chan_num;
