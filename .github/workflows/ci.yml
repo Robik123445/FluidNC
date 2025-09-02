@@ -1,5 +1,11 @@
+---
+# yamllint disable rule:line-length
 name: FluidNC Continuous Integration
-on: [push, pull_request]
+'on':
+  pull_request:
+  push:
+    branches:
+      - main
 jobs:
   build:
     strategy:
@@ -12,12 +18,8 @@ jobs:
           - noradio
           - wifi
           - bt
-        # - wifibt
-        # - debug
         pio_env_variant:
           - ""
-        # - "_s2"
-        # - "_s3"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -45,6 +47,32 @@ jobs:
           path: |
             .pio/build/${{ matrix.pio_env }}${{ matrix.pio_env_variant }}/firmware.*
             .pio/build/${{ matrix.pio_env }}${{ matrix.pio_env_variant }}/partitions.bin
+
+  build_s3:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pio_env:
+          - wifi_s3
+          - noradio_s3
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          cache: "pip"
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Cache PlatformIO
+        uses: actions/cache@v3
+        with:
+          path: ~/.platformio
+          key: platformio-${{ runner.os }}
+      - name: Build ${{ matrix.pio_env }}
+        run: pio run -e ${{ matrix.pio_env }}
 
   tests:
     strategy:
