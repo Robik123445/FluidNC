@@ -24,6 +24,34 @@ FluidNC supports the ESP32‑S3 module. Build firmware with [PlatformIO](https:/
 - `platformio run -e bt_s3` – Bluetooth enabled
 - `platformio run -e noradio_s3` – no wireless features
 
+### wifi_s3 and noradio_s3 environments
+
+Both S3 environments require the `xtensa-esp32s3` toolchain, which PlatformIO installs automatically.
+
+**Common libraries**
+
+- [TMCStepper](https://github.com/teemuatlut/TMCStepper)
+- [ESP8266 and ESP32 OLED driver for SSD1306 displays](https://github.com/ThingPulse/esp8266-oled-ssd1306)
+
+**Additional WiFi dependencies**
+
+- [arduinoWebSockets](https://github.com/MitchBradley/arduinoWebSockets)
+- [WiFi](https://github.com/MitchBradley/WiFi)
+
+#### Build
+
+```bash
+platformio run -e wifi_s3
+platformio run -e noradio_s3
+```
+
+#### Flash
+
+```bash
+platformio run -e wifi_s3 -t upload
+platformio run -e noradio_s3 -t upload
+```
+
 ESP32‑S3 boards must provide 16 MB flash and 8 MB PSRAM. The S3 offers only four RMT channels and lacks an internal DAC, so analog spindle output requires an external device.
 
 An [ESP32‑S3 example configuration](https://github.com/bdring/fluidnc-config-files/blob/main/official/esp32-s3-example.yaml) is available for reference.
