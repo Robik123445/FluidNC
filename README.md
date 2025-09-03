@@ -52,6 +52,14 @@ platformio run -e wifi_s3 -t upload
 platformio run -e noradio_s3 -t upload
 ```
 
+#### Monitor
+
+Use PlatformIO's USB monitor to watch the USB‑CDC console:
+
+```bash
+pio device monitor -p usb -b 115200
+```
+
 ESP32‑S3 boards must provide 16 MB flash and 8 MB PSRAM. The S3 offers only four RMT channels and lacks an internal DAC, so analog spindle output requires an external device.
 
 An [ESP32‑S3 example configuration](https://github.com/bdring/fluidnc-config-files/blob/main/official/esp32-s3-example.yaml) is available for reference.
