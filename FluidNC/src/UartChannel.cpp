@@ -4,6 +4,7 @@
 #include "UartChannel.h"
 #include "Machine/MachineConfig.h"  // config
 #include "Serial.h"                 // allChannels
+#include <Arduino.h>                 // Serial, USB-CDC
 
 UartChannel::UartChannel(int num, bool addCR) : Channel("uart_channel", num, addCR) {
     _lineedit = new Lineedit(this, _line, Channel::maxLine - 1);
@@ -171,9 +172,15 @@ bool UartChannel::setAttr(int index, bool* value, const std::string& attrString)
     return false;
 }
 
+// Uart0 uses Serial/Serial0 mapped to USB-CDC; additional UARTs use Serial1 with explicit GPIOs.
 UartChannel Uart0(0, true);  // Primary serial channel with LF to CRLF conversion
 
 void uartInit() {
+    // Initialize USB-CDC so Serial/Serial0 is available on the USB port.
+#if ARDUINO_USB_CDC_ON_BOOT
+    Serial.begin(BAUD_RATE);  // Inicializuj USB-CDC port
+#endif
+
     auto uart0 = new Uart(0);
     uart0->begin(BAUD_RATE, UartData::Bits8, UartStop::Bits1, UartParity::None);
     Uart0.init(uart0);
