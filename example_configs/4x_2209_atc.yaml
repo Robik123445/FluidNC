@@ -35,7 +35,7 @@ axes:
       seek_mm_per_min: 1500
       feed_mm_per_min: 700
     motor0:
-      limit_neg_pin: gpio.35:low
+      limit_neg_pin: gpio.27:low
       limit_pos_pin: NO_PIN
       limit_all_pin: NO_PIN
       pulloff_mm: 2
@@ -133,7 +133,7 @@ control:
   cycle_start_pin: NO_PIN
 
 probe:
-  pin: gpio.36:low
+  pin: gpio.15:low
   toolsetter_pin: gpio.33:low:pu
 spi:
   miso_pin: gpio.19
