@@ -36,9 +36,10 @@ namespace Spindles {
 
         ~Dac() {}
 
-    private:
+        // Operating modes for the DAC backend
         enum Mode { Internal = 0, MCP4822 = 1, PWM = 2 };
 
+    private:
         bool     _gpio_ok;  // true when selected backend initialised correctly
         int      _mode      = Internal;
         uint32_t _pwm_freq  = 5000;  // PWM frequency when using PWM backend

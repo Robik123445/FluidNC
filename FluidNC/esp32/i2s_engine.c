@@ -14,13 +14,27 @@
 #include "Driver/i2s_out.h"
 #include "Driver/StepTimer.h"
 #include "hal/i2s_hal.h"
+#include "hal_target.h"
 #include "hal/i2s_ll.h"
 #include <soc/i2s_periph.h>
 #include <soc/gpio_sig_map.h>
-#ifndef I2S_LL_TX_FIFO_EMPTY_INT
-#    define I2S_LL_TX_FIFO_EMPTY_INT I2S_TX_PUT_DATA_INT_ENA
-#    define I2S_FIFO_WRITE(v) (I2S0.fifo_wr = (v))
+
+// Harmonise FIFO access and interrupt flags across ESP32 variants.
+// ESP32-S3 removed the fifo_wr register and changed interrupt naming.
+#if HAL_TARGET_ESP32S3
+#    include <soc/i2s_reg.h>
+#    ifndef I2S_LL_TX_FIFO_EMPTY_INT
+#        ifdef I2S_TX_DONE_INT_ENA
+#            define I2S_LL_TX_FIFO_EMPTY_INT I2S_TX_DONE_INT_ENA
+#        else
+#            define I2S_LL_TX_FIFO_EMPTY_INT (1 << 1)
+#        endif
+#    endif
+#    define I2S_FIFO_WRITE(v) do { I2S0.int_raw.val = (v); } while (0)
 #else
+#    ifndef I2S_LL_TX_FIFO_EMPTY_INT
+#        define I2S_LL_TX_FIFO_EMPTY_INT I2S_TX_PUT_DATA_INT_ENA
+#    endif
 #    define I2S_FIFO_WRITE(v) (I2S0.tx_fifo.buf[0] = (v))
 #endif
 
@@ -29,7 +43,16 @@
 #endif
 
 #ifndef SOC_I2S_FIFO_LEN
-#    define SOC_I2S_FIFO_LEN (I2S_TX_DATA_NUM + 1)
+#    define SOC_I2S_FIFO_LEN 64
+#endif
+
+#if HAL_TARGET_ESP32S3
+#    define i2s_ll_enable_intr(hw, mask, en)                       \
+        do {                                                       \
+            if (en) { (hw)->int_ena.val |= (mask); }               \
+            else { (hw)->int_ena.val &= ~(mask); }                 \
+        } while (0)
+#    define i2s_ll_clear_intr_status(hw, mask) (hw)->int_clr.val = (mask)
 #endif
 
 #include <sdkconfig.h>
@@ -139,12 +162,16 @@ static int i2s_out_start() {
     i2s_out_reset_fifo_without_lock();
 
     // i2s_ll_tx_set_chan_mod(&I2S0, I2S_CHANNEL_FMT_RIGHT_LEFT);
+#if !HAL_TARGET_ESP32S3
     i2s_ll_tx_stop_on_fifo_empty(&I2S0, true);
+#endif
     i2s_ll_tx_start(&I2S0);
 
     // Wait for the first FIFO data to prevent the unintentional generation of 0 data
     delay_us(20);
+#if !HAL_TARGET_ESP32S3
     i2s_ll_tx_stop_on_fifo_empty(&I2S0, false);
+#endif
 
     return 0;
 }
@@ -254,7 +281,9 @@ int i2s_out_init(i2s_out_init_t* init_param) {
    */
 
     // stop i2s
+#if !HAL_TARGET_ESP32S3
     i2s_ll_tx_stop_link(&I2S0);
+#endif
     i2s_ll_tx_stop(&I2S0);
 
     // i2s_param_config
@@ -263,32 +292,36 @@ int i2s_out_init(i2s_out_init_t* init_param) {
 
     i2s_out_reset_fifo_without_lock();
 
+#if !HAL_TARGET_ESP32S3
     i2s_ll_enable_lcd(&I2S0, false);
     i2s_ll_enable_camera(&I2S0, false);
 #ifdef SOC_I2S_SUPPORTS_PDM_TX
     i2s_ll_tx_enable_pdm(&I2S0, false);
 #endif
-
     i2s_ll_enable_dma(&I2S0, false);
-
     i2s_ll_tx_set_chan_mod(&I2S0, I2S_CHANNEL_FMT_RIGHT_LEFT);  // Overridden by i2s_out_start
+#endif
 
     i2s_ll_tx_set_sample_bit(&I2S0, I2S_BITS_PER_SAMPLE_32BIT, I2S_BITS_PER_SAMPLE_16BIT);
     i2s_ll_tx_enable_mono_mode(&I2S0, false);
 
+#if !HAL_TARGET_ESP32S3
     i2s_ll_enable_dma(&I2S0, false);  // FIFO is not connected to DMA
+#endif
     i2s_ll_tx_stop(&I2S0);
     i2s_ll_rx_stop(&I2S0);
 
+#if !HAL_TARGET_ESP32S3
     i2s_ll_tx_enable_msb_right(&I2S0, true);  // Place right-channel data at the MSB in the transmit FIFO.
-
     i2s_ll_tx_enable_right_first(&I2S0, false);  // Send the left-channel data first
     // i2s_ll_tx_enable_right_first(&I2S0, true);  // Send the right-channel data first
-
     i2s_ll_tx_set_slave_mod(&I2S0, false);  // Master
     i2s_ll_tx_force_enable_fifo_mod(&I2S0, true);
 #ifdef SOC_I2S_SUPPORTS_PDM_TX
     i2s_ll_tx_enable_pdm(&I2S0, false);
+#endif
+#else
+    i2s_ll_tx_set_slave_mod(&I2S0, false);  // Master
 #endif
 
     // I2S_COMM_FORMAT_I2S_LSB
@@ -423,10 +456,12 @@ static void IRAM_ATTR i2s_isr() {
 }
 
 static void i2s_fifo_intr_setup() {
-    I2S0.fifo_conf.tx_data_num = FIFO_THRESHOLD;
+#if !HAL_TARGET_ESP32S3
+    I2S0.tx_fifo_conf.tx_data_num = FIFO_THRESHOLD;
+#endif
     esp_intr_alloc_intrstatus(ETS_I2S0_INTR_SOURCE,
                               ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL3,
-                              (uint32_t)i2s_ll_get_intr_status_reg(&I2S0),
+                              (uint32_t)&I2S0.int_st.val,
                               I2S_LL_TX_FIFO_EMPTY_INT,
                               i2s_isr,
                               NULL,
