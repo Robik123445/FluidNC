@@ -18,18 +18,18 @@
 #include <soc/i2s_periph.h>
 #include <soc/gpio_sig_map.h>
 #ifndef I2S_LL_TX_FIFO_EMPTY_INT
-#define I2S_LL_TX_FIFO_EMPTY_INT I2S_TX_PUT_DATA_INT_ENA
-#define I2S_FIFO_WRITE(v) (I2S0.fifo_wr = (v))
+#    define I2S_LL_TX_FIFO_EMPTY_INT I2S_TX_PUT_DATA_INT_ENA
+#    define I2S_FIFO_WRITE(v) (I2S0.fifo_wr = (v))
 #else
-#define I2S_FIFO_WRITE(v) (I2S0.tx_fifo.buf[0] = (v))
+#    define I2S_FIFO_WRITE(v) (I2S0.tx_fifo.buf[0] = (v))
 #endif
 
 #ifndef I2S0O_SD_OUT_IDX
-#define I2S0O_SD_OUT_IDX I2S0O_DATA_OUT23_IDX
+#    define I2S0O_SD_OUT_IDX I2S0O_DATA_OUT23_IDX
 #endif
 
 #ifndef SOC_I2S_FIFO_LEN
-#define SOC_I2S_FIFO_LEN (I2S_TX_DATA_NUM + 1)
+#    define SOC_I2S_FIFO_LEN (I2S_TX_DATA_NUM + 1)
 #endif
 
 #include <sdkconfig.h>
@@ -294,12 +294,19 @@ int i2s_out_init(i2s_out_init_t* init_param) {
     i2s_ll_tx_set_ws_width(&I2S0, 0);          // PCM standard mode.
     i2s_ll_tx_enable_msb_shift(&I2S0, false);  // Do not use the Philips standard to avoid bit-shifting
 
-#ifdef CONFIG_IDF_TARGET_ESP32
+    // clang-format off
+#if !CONFIG_IDF_TARGET_ESP32S3
+    // Classic ESP32: use the Audio PLL for precise stepping timings
+    i2s_ll_tx_clk_set_src(&I2S0, I2S_CLK_APLL);
+#else
+    // ESP32-S3: APLL is unavailable, fall back to 160 MHz PLL clock
+#ifdef I2S_CLK_SRC_PLL_160M
+    i2s_ll_tx_clk_set_src(&I2S0, I2S_CLK_SRC_PLL_160M);
+#else
     i2s_ll_tx_clk_set_src(&I2S0, I2S_CLK_D2CLK);
-#elif CONFIG_IDF_TARGET_ESP32S3
-    // ESP32-S3 používa správny zdroj hodin hneď po resetovaní,
-    // takže nie je potrebné volanie i2s_ll_tx_clk_set_src().
 #endif
+#endif
+    // clang-format on
     // N + b/a = 0
     //    i2s_ll_mclk_div_t first_div = { 2, 3, 47 };  // { N, b, a }
     //    i2s_ll_tx_set_clk(&I2S0, &first_div);
