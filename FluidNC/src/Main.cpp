@@ -25,6 +25,10 @@
 
 #    include "src/ToolChangers/atc.h"
 
+#    if CONFIG_IDF_TARGET_ESP32S3
+#        include "boards/esp32s3_devkitc_1.h"
+#    endif
+
 extern void make_user_commands();
 
 void setup() {
@@ -34,6 +38,10 @@ void setup() {
         uartInit();  // Setup serial port
 
         StartupLog::init();
+
+#if CONFIG_IDF_TARGET_ESP32S3
+        s3_board_setup();
+#endif
 
         // Setup input polling loop after loading the configuration,
         // because the polling may depend on the config
