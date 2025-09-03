@@ -85,17 +85,10 @@ static IRAM_ATTR void start_step() {}
 
 // Restart the RMT which has already been configured
 // for the desired pulse length, polarity, and direction delay
+// Start prepared RMT transaction for a step pulse
+// Spúšťa pripravený RMT prenos pre krokový impulz
 static IRAM_ATTR void set_step_pin(int pin, int level) {
-#ifdef CONFIG_IDF_TARGET_ESP32
-    RMT.conf_ch[pin].conf1.mem_rd_rst = 1;
-    RMT.conf_ch[pin].conf1.mem_rd_rst = 0;
-    RMT.conf_ch[pin].conf1.tx_start   = 1;
-#endif
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-    RMT.chnconf0[pin].mem_rd_rst_n = 1;
-    RMT.chnconf0[pin].mem_rd_rst_n = 0;
-    RMT.chnconf0[pin].tx_start_n   = 1;
-#endif
+    hal_rmt_start_tx(pin, level);
 }
 
 // This is a noop because the RMT channels do everything

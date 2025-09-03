@@ -12,6 +12,7 @@
 
 #include <Arduino.h>
 #include <sdkconfig.h>
+#include "esp32/hal_target.h"
 
 namespace Spindles {
     // =========================== Ledc ============================
@@ -76,7 +77,7 @@ namespace Spindles {
 
     // Configuration registration
     namespace {
-    #ifdef CONFIG_IDF_TARGET_ESP32S3
+    #if !HAL_HAS_DAC
         SpindleFactory::InstanceBuilder<Ledc> registration("DAC");
     #endif
     }

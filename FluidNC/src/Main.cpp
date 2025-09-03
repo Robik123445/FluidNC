@@ -24,8 +24,9 @@
 #    include "esp32-hal.h"  // disableCore0WDT
 
 #    include "src/ToolChangers/atc.h"
+#    include "esp32/hal_target.h"
 
-#    if CONFIG_IDF_TARGET_ESP32S3
+#    if HAL_TARGET_ESP32S3
 #        include "boards/esp32s3_devkitc_1.h"
 #    endif
 
@@ -39,7 +40,7 @@ void setup() {
 
         StartupLog::init();
 
-#if CONFIG_IDF_TARGET_ESP32S3
+#if HAL_TARGET_ESP32S3
         s3_board_setup();
 #endif
 

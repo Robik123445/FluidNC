@@ -8,8 +8,9 @@
 #include "src/Config.h"
 
 #include <sdkconfig.h>
+#include "hal_target.h"
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#if HAL_TARGET_ESP32S3
 #    define HSPI_HOST SPI2_HOST
 #endif
 

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#define CONFIG_IDF_TARGET_ESP32S3
+#define HAL_TARGET_ESP32S3 1
 #include "../esp32/rmt_hal.h"
 
 // Verify log message when too many axes are configured

@@ -11,6 +11,7 @@
 #include "DacSpindle.h"
 
 #include <sdkconfig.h>
+#include "esp32/hal_target.h"
 
 #include <cstdint>
 
@@ -125,9 +126,7 @@ namespace Spindles {
 
     // Configuration registration
     namespace {
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-    // DAC spindle replaced by LEDC on ESP32-S3
-#else
+#if HAL_HAS_DAC
         SpindleFactory::InstanceBuilder<Dac> registration("DAC");
 #endif
     }

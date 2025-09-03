@@ -37,6 +37,7 @@
 #include "Driver/delay_usecs.h"  // delay_us()
 
 #include <esp_attr.h>  // IRAM_ATTR
+#include "hal_target.h"
 
 #include <freertos/FreeRTOS.h>
 
@@ -295,7 +296,7 @@ int i2s_out_init(i2s_out_init_t* init_param) {
     i2s_ll_tx_enable_msb_shift(&I2S0, false);  // Do not use the Philips standard to avoid bit-shifting
 
     // clang-format off
-#if !CONFIG_IDF_TARGET_ESP32S3
+#if HAL_HAS_APLL
     // Classic ESP32: use the Audio PLL for precise stepping timings
     i2s_ll_tx_clk_set_src(&I2S0, I2S_CLK_APLL);
 #else

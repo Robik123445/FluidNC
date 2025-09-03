@@ -1,21 +1,19 @@
 #pragma once
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#include "hal_target.h"
+
+// Define human-readable target name
+#if HAL_TARGET_ESP32S3
 #define RMT_TARGET_STRING "ESP32-S3"
-#ifdef __cplusplus
-// Maximum number of RMT TX channels for ESP32-S3
-constexpr int kMaxRmtTx = 4;
-#else
-#define kMaxRmtTx 4
-#endif
 #else
 #define RMT_TARGET_STRING "ESP32"
-#ifdef __cplusplus
-// Maximum number of RMT TX channels for other ESP32 targets
-constexpr int kMaxRmtTx = 8;
-#else
-#define kMaxRmtTx 8
 #endif
+
+#ifdef __cplusplus
+// Maximum number of RMT TX channels for the active target
+constexpr int kMaxRmtTx = HAL_RMT_TX_MAX;
+#else
+#define kMaxRmtTx HAL_RMT_TX_MAX
 #endif
 
 #ifdef __cplusplus
@@ -32,3 +30,11 @@ inline std::string RmtAxisLimitMsg(int configured) {
 }
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+// Start RMT transmission on given channel
+void hal_rmt_start_tx(int pin, int level);
+#ifdef __cplusplus
+}
+#endif
