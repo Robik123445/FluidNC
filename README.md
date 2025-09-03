@@ -64,6 +64,8 @@ ESP32‑S3 boards must provide 16 MB flash and 8 MB PSRAM. The S3 offers onl
 
 An [ESP32‑S3 example configuration](https://github.com/bdring/fluidnc-config-files/blob/main/official/esp32-s3-example.yaml) is available for reference.
 
+See [README-S3](README-S3.md) for flashing, USB-CDC usage, and quick test steps.
+
 The DevKitC‑1 board exposes an on‑board status LED on **GPIO38**. The firmware uses the `S3_BOARD_LED_PIN` macro (default 38) to configure this LED at start-up; override it via a build flag if your design uses a different pin. Pins **GPIO35–GPIO37** are unavailable on ESP32‑S3 modules and should be avoided in configurations.
 
 ## Basic Grbl Compatibility
