@@ -306,6 +306,9 @@
     <ClInclude Include="FluidNC\src\Spindles\DacSpindle.h">
       <Filter>src\Spindles</Filter>
     </ClInclude>
+    <ClInclude Include="FluidNC\src\Spindles\LedcSpindle.h">
+      <Filter>src\Spindles</Filter>
+    </ClInclude>
     <ClInclude Include="FluidNC\src\CPUMap.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -639,6 +642,9 @@
       <Filter>src\Kinematics</Filter>
     </ClCompile>
     <ClCompile Include="FluidNC\src\Spindles\DacSpindle.cpp">
+      <Filter>src\Spindles</Filter>
+    </ClCompile>
+    <ClCompile Include="FluidNC\src\Spindles\LedcSpindle.cpp">
       <Filter>src\Spindles</Filter>
     </ClCompile>
     <ClCompile Include="FluidNC\src\Pins\PinDetail.cpp">

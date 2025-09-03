@@ -2,6 +2,8 @@
 
 Provides analogue spindle speed control using one of three backends:
 
+> Note: On ESP32-S3 the DAC is not available; use `spindle_driver: ledc` to emulate analogue output via LEDC PWM.
+
 - **internal** – uses ESP32 built-in DAC on pins 25 or 26.
 - **mcp4822** – drives an external MCP4822 12‑bit SPI DAC.
 - **pwm** – outputs PWM that can be filtered by an RC network to obtain a voltage.

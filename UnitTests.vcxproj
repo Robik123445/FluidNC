@@ -127,6 +127,7 @@
     <ClInclude Include="FluidNC\src\WebUI\WebClient.h" />
     <ClInclude Include="FluidNC\src\Motors\Dynamixel2.h" />
     <ClInclude Include="FluidNC\src\Spindles\DacSpindle.h" />
+    <ClInclude Include="FluidNC\src\Spindles\LedcSpindle.h" />
     <ClInclude Include="FluidNC\src\CPUMap.h" />
     <ClInclude Include="FluidNC\src\PinMapper.h" />
     <ClInclude Include="FluidNC\src\Spindles\NullSpindle.h" />
@@ -232,6 +233,7 @@
     <ClCompile Include="FluidNC\src\Stepping.cpp" />
     <ClCompile Include="FluidNC\src\Kinematics\CoreXY.cpp" />
     <ClCompile Include="FluidNC\src\Spindles\DacSpindle.cpp" />
+    <ClCompile Include="FluidNC\src\Spindles\LedcSpindle.cpp" />
     <ClCompile Include="FluidNC\src\Pins\PinDetail.cpp" />
     <ClCompile Include="FluidNC\src\Spindles\HuanyangSpindle.cpp" />
     <ClCompile Include="FluidNC\src\Report.cpp" />
