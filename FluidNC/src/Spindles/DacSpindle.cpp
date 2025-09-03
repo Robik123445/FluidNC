@@ -10,6 +10,8 @@
 */
 #include "DacSpindle.h"
 
+#include <sdkconfig.h>
+
 #include <cstdint>
 
 extern void dacWrite(uint8_t pin, uint8_t value);
@@ -123,6 +125,10 @@ namespace Spindles {
 
     // Configuration registration
     namespace {
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+    // DAC spindle replaced by LEDC on ESP32-S3
+#else
         SpindleFactory::InstanceBuilder<Dac> registration("DAC");
+#endif
     }
 }

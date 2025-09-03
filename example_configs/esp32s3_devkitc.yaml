@@ -38,6 +38,7 @@ probe:
   pin: gpio.21:low          # dotyková sonda
 
 spindle:
+  spindle_driver: ledc
   pwm_pin: gpio.14          # PWM výstup pre vreteno
   enable_pin: gpio.15:low   # zapínanie vretena
 
