@@ -2,6 +2,7 @@
 #include "EnumItem.h"
 #include "Stepping.h"
 #include "Machine/MachineConfig.h"  // config
+#include "../esp32/rmt_hal.h"
 
 #include <atomic>
 
@@ -52,6 +53,16 @@ namespace Machine {
     void Stepping::init() {
         log_info("Stepping:" << stepTypes[_engine].name << " Pulse:" << _pulseUsecs << "us Dsbl Delay:" << _disableDelayUsecs
                              << "us Dir Delay:" << _directionDelayUsecs << "us Idle Delay:" << _idleMsecs << "ms");
+
+        if (_engine == RMT_ENGINE) {
+            int axes = config->_axes->_numberAxis;
+            // Ensure we do not request more RMT TX channels than hardware allows
+            // Kontroluje, že počet osí neprekročí dostupné RMT kanály
+            if (axes > kMaxRmtTx) {
+                log_error(RmtAxisLimitMsg(axes));
+                Assert(axes <= kMaxRmtTx);
+            }
+        }
 
         uint32_t actual = step_engine->init(_directionDelayUsecs, _pulseUsecs, fStepperTimer, Stepper::pulse_func);
         if (actual != _pulseUsecs) {
