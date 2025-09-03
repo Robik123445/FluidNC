@@ -120,3 +120,36 @@ jobs:
       - if: matrix.os != 'windows-latest'
         name: Run tests
         run: pio test -e ${{ matrix.pio_env }} -vv
+
+  build_esp32s3_devkitc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          cache: "pip"
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Cache PlatformIO
+        uses: actions/cache@v3
+        with:
+          path: ~/.platformio
+          key: platformio-${{ runner.os }}
+      - name: Build esp32s3-devkitc-1-n16r8
+        run: pio run -e esp32s3-devkitc-1-n16r8 -v | tee build.log
+      - name: Verify PSRAM and USB-CDC
+        run: |
+          grep -i 'board_build.psram: enabled' build.log
+          grep -i 'ARDUINO_USB_CDC_ON_BOOT=1' build.log
+          grep -E 'board_build.psram|ARDUINO_USB_CDC_ON_BOOT' build.log > verification.log
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp32s3-devkitc-1-n16r8_build_logs
+          path: |
+            build.log
+            verification.log
